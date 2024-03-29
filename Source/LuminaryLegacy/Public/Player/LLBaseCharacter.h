@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "LLBaseCharacter.generated.h"
 
+class UCameraComponent;
+
 UCLASS()
 class LUMINARYLEGACY_API ALLBaseCharacter : public ACharacter
 {
@@ -16,6 +18,9 @@ public:
 	ALLBaseCharacter();
 
 protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+    UCameraComponent* CameraComponent;
+    
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

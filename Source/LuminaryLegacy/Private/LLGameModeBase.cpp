@@ -2,4 +2,11 @@
 
 
 #include "LLGameModeBase.h"
+#include "Player/LLBaseCharacter.h"
+#include "Player/LLPlayerController.h"
 
+ALLGameModeBase::ALLGameModeBase()
+{
+    DefaultPawnClass = ALLBaseCharacter::StaticClass();
+    PlayerControllerClass = ALLPlayerController::StaticClass();
+}

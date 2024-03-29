@@ -13,5 +13,7 @@ UCLASS()
 class LUMINARYLEGACY_API ALLGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+    ALLGameModeBase();
 };
