@@ -3,6 +3,9 @@
 
 #include "Player/LLBaseCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
+
+DEFINE_LOG_CATEGORY_STATIC(BaseCharacterLog, All, All);
 
 // Sets default values
 ALLBaseCharacter::ALLBaseCharacter()
@@ -10,7 +13,7 @@ ALLBaseCharacter::ALLBaseCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-    CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+    CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(GetRootComponent());
 }
 
@@ -33,5 +36,17 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    PlayerInputComponent->BindAxis("MoveForward", this, &ALLBaseCharacter::MoveForward);
+    PlayerInputComponent->BindAxis("MoveRight", this, &ALLBaseCharacter::MoveRight);
+}
+
+void ALLBaseCharacter::MoveForward(float Value)
+{
+    AddMovementInput(GetActorForwardVector(), Value);
+}
+
+void ALLBaseCharacter::MoveRight(float Value)
+{
+    AddMovementInput(GetActorRightVector(), Value);
 }
 
