@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "LLBaseCharacter.generated.h"
 
+class USpringArmComponent;
 class UCameraComponent;
 
 UCLASS()
@@ -18,6 +19,9 @@ public:
 	ALLBaseCharacter();
 
 protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+    USpringArmComponent* SpringArmComponent;
+    
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
     UCameraComponent* CameraComponent;
     
@@ -32,9 +36,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-    UFUNCTION()
+    // Simple moving
     void MoveForward(float Value);
-
-    UFUNCTION()
     void MoveRight(float Value);
 };
