@@ -4,7 +4,9 @@
 #include "Player/LLBaseCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 DEFINE_LOG_CATEGORY_STATIC(BaseCharacterLog, All, All);
 
@@ -17,6 +19,10 @@ ALLBaseCharacter::ALLBaseCharacter()
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(GetRootComponent());
     SpringArmComponent->bUsePawnControlRotation = true;
+    bUseControllerRotationYaw = false;
+    bUseControllerRotationPitch = false;
+    
+    GetCharacterMovement()->bOrientRotationToMovement = true;
 
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent);
@@ -26,14 +32,12 @@ ALLBaseCharacter::ALLBaseCharacter()
 void ALLBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void ALLBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -49,11 +53,13 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void ALLBaseCharacter::MoveForward(float Value)
 {
-    AddMovementInput(GetActorForwardVector(), Value);
+    FVector Direction = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
+    AddMovementInput(Direction, Value);
 }
 
 void ALLBaseCharacter::MoveRight(float Value)
 {
-    AddMovementInput(GetActorRightVector(), Value);
+    FVector Direction = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
+    AddMovementInput(Direction, Value);
 }
 
