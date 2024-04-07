@@ -5,7 +5,6 @@
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "LLPlayerController.h"
 #include "LLBaseCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -27,12 +26,24 @@ ALLPlayerCamera::ALLPlayerCamera()
     CameraComponent->SetupAttachment(SpringArmComponent);
 }
 
+void ALLPlayerCamera::OnPlayerLanded(const FHitResult& Hit)
+{
+    float HightDiff = FMath::Abs(Hit.Location.Z - CameraHightTarget);
+    if (HightDiff > ZHightThreshold)
+    {
+        CameraHightTarget = Hit.Location.Z;
+    }
+    GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Green, TEXT("Landed"));
+}
+
 // Called when the game starts or when spawned
 void ALLPlayerCamera::BeginPlay()
 {
 	Super::BeginPlay();
 
     CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+    CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
 }
 
 // Called every frame
@@ -43,7 +54,8 @@ void ALLPlayerCamera::Tick(float DeltaTime)
     if (CameraTarget)
     {
         FVector NewLocation = FMath::VInterpTo(GetActorLocation(), CameraTarget->GetActorLocation(), DeltaTime, 3.0f);
-        SetActorLocation(NewLocation);
+        float NewHeight = FMath::FInterpTo(GetActorLocation().Z, CameraHightTarget, DeltaTime, 3.0f);
+        SetActorLocation(FVector(NewLocation.X, NewLocation.Y, NewHeight));
     }
 }
 

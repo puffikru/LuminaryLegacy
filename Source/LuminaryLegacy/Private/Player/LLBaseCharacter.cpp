@@ -36,6 +36,9 @@ void ALLBaseCharacter::BeginPlay()
     bUseControllerRotationYaw = false;
     bUseControllerRotationPitch = false;
     GetCharacterMovement()->bOrientRotationToMovement = true;
+    GetCharacterMovement()->JumpZVelocity = 1250.0f;
+    GetCharacterMovement()->AirControl = 0.8f;
+    GetCharacterMovement()->GravityScale = 2.5f;
 
     SetView(EViewType::SideView);
 }
@@ -56,6 +59,7 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     PlayerInputComponent->BindAxis("LookUp", this, &ALLBaseCharacter::AddControllerPitchInput);
     PlayerInputComponent->BindAxis("TurnAround", this, &ALLBaseCharacter::AddControllerYawInput);
     PlayerInputComponent->BindAction("SwitchCamera", IE_Pressed, this, &ALLBaseCharacter::SwitchCamera);
+    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ALLBaseCharacter::Jump);
 }
 
 void ALLBaseCharacter::MoveForward(float Value)
@@ -105,6 +109,8 @@ void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
                 Camera->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
                 PlayerController->SetViewTargetWithBlend(Camera, BlendTime);
                 SetupCamera(View);
+
+                
             }
         break;
         case EViewType::ThirdPerson:

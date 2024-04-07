@@ -21,6 +21,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
     ACharacter* CameraTarget;
 
+    UFUNCTION()
+    void OnPlayerLanded(const FHitResult& Hit);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -38,5 +41,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-    
+private:
+    float CameraHightTarget = 0.0f;
+
+    float ZHightThreshold = 200.0f;
 };
