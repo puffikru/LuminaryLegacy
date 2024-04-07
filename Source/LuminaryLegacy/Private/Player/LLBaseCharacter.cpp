@@ -36,9 +36,9 @@ void ALLBaseCharacter::BeginPlay()
     bUseControllerRotationYaw = false;
     bUseControllerRotationPitch = false;
     GetCharacterMovement()->bOrientRotationToMovement = true;
-    GetCharacterMovement()->JumpZVelocity = 1250.0f;
-    GetCharacterMovement()->AirControl = 0.8f;
-    GetCharacterMovement()->GravityScale = 2.5f;
+    GetCharacterMovement()->JumpZVelocity = JumpZVelocity;
+    GetCharacterMovement()->AirControl = AirControl;
+    GetCharacterMovement()->GravityScale = GravityScale;
 
     SetView(EViewType::SideView);
 }
@@ -105,12 +105,13 @@ void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
             if (PlayerController)
             {
                 SideWalk = true;
-                ALLPlayerCamera* Camera = GetWorld()->SpawnActor<ALLPlayerCamera>(PlayerCamera2D, this->GetActorTransform());
+                if (!Camera)
+                {
+                    Camera = CreateCamera();
+                }
                 Camera->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
                 PlayerController->SetViewTargetWithBlend(Camera, BlendTime);
                 SetupCamera(View);
-
-                
             }
         break;
         case EViewType::ThirdPerson:
@@ -141,4 +142,9 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
             GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("ThirdPersonView"));
             break;
     }
+}
+
+ALLPlayerCamera* ALLBaseCharacter::CreateCamera()
+{
+    return GetWorld()->SpawnActor<ALLPlayerCamera>(PlayerCamera2D, this->GetActorTransform());
 }

@@ -43,6 +43,6 @@ public:
 
 private:
     float CameraHightTarget = 0.0f;
-
     float ZHightThreshold = 200.0f;
+    float ZHightUpperThreshold = 350.0f;
 };

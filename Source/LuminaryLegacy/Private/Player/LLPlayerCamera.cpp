@@ -54,8 +54,9 @@ void ALLPlayerCamera::Tick(float DeltaTime)
     if (CameraTarget)
     {
         FVector NewLocation = FMath::VInterpTo(GetActorLocation(), CameraTarget->GetActorLocation(), DeltaTime, 3.0f);
-        float NewHeight = FMath::FInterpTo(GetActorLocation().Z, CameraHightTarget, DeltaTime, 3.0f);
-        SetActorLocation(FVector(NewLocation.X, NewLocation.Y, NewHeight));
+        float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
+        float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
+        SetActorLocation(FVector(NewLocation.X, NewLocation.Y, FMath::FInterpTo(GetActorLocation().Z, NewHeight, DeltaTime, 3.0f)));
     }
 }
 
