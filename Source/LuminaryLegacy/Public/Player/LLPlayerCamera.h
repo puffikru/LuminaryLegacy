@@ -21,8 +21,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
     ACharacter* CameraTarget;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
+    float CameraOffset = 350.0f;
+    
     UFUNCTION()
     void OnPlayerLanded(const FHitResult& Hit);
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -45,4 +49,7 @@ private:
     float CameraHightTarget = 0.0f;
     float ZHightThreshold = 200.0f;
     float ZHightUpperThreshold = 350.0f;
+    
+
+    FVector GetCharacterOffset() const;
 };
