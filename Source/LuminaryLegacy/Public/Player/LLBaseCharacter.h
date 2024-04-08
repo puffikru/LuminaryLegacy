@@ -6,10 +6,13 @@
 #include "GameFramework/Character.h"
 #include "LLBaseCharacter.generated.h"
 
+struct FInputActionValue;
 class ALLPlayerCamera;
 enum class EViewType : uint8;
 class USpringArmComponent;
 class UCameraComponent;
+class UInputAction;
+class UInputMappingContext;
 
 UCLASS()
 class LUMINARYLEGACY_API ALLBaseCharacter : public ACharacter
@@ -29,7 +32,20 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
     float GravityScale = 2.5f;
 
-    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UInputAction* InputMoving;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UInputAction* CameraSwitch;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UInputAction* Look;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UInputAction* Jumping;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    TSoftObjectPtr<UInputMappingContext> InputMappingContext;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
@@ -53,15 +69,17 @@ public:
 
 private:
     // Simple moving
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    bool SideWalk = false;
 
+    void Moving(const FInputActionValue& Value);
+    void Looking(const FInputActionValue& Value);
+    
+    bool SideWalk = false;
+    
     // Camera
     void SwitchCamera();
     void SetView(EViewType View, float BlendTime = 0.0f);
     void SetupCamera(EViewType View);
     ALLPlayerCamera* CreateCamera();
-
+    
     AActor* Camera;
 };

@@ -10,6 +10,12 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "LLCoreTypes.h"
 #include "LLPlayerCamera.h"
+#include "Kismet/GameplayStatics.h"
+#include "EnhancedInputComponent.h"
+#include "InputAction.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(BaseCharacterLog, All, All);
 
@@ -22,7 +28,6 @@ ALLBaseCharacter::ALLBaseCharacter()
     TPSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("TPSpringArmComponent"));
     TPSpringArmComponent->SetupAttachment(GetRootComponent());
     TPSpringArmComponent->bUsePawnControlRotation = true;
-    GetCharacterMovement()->bOrientRotationToMovement = true;
 
     TPCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPCameraComponent"));
     TPCameraComponent->SetupAttachment(TPSpringArmComponent);
@@ -32,10 +37,15 @@ ALLBaseCharacter::ALLBaseCharacter()
 void ALLBaseCharacter::BeginPlay()
 {
     Super::BeginPlay();
-
-    bUseControllerRotationYaw = false;
-    bUseControllerRotationPitch = false;
-    GetCharacterMovement()->bOrientRotationToMovement = true;
+  
+    if (ALLPlayerController* PlayerController = Cast<ALLPlayerController>(Controller))
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+        {
+            Subsystem->AddMappingContext(InputMappingContext.LoadSynchronous(), 0);
+        }
+    }
+    
     GetCharacterMovement()->JumpZVelocity = JumpZVelocity;
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->GravityScale = GravityScale;
@@ -54,33 +64,40 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    PlayerInputComponent->BindAxis("MoveForward", this, &ALLBaseCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &ALLBaseCharacter::MoveRight);
-    PlayerInputComponent->BindAxis("LookUp", this, &ALLBaseCharacter::AddControllerPitchInput);
-    PlayerInputComponent->BindAxis("TurnAround", this, &ALLBaseCharacter::AddControllerYawInput);
-    PlayerInputComponent->BindAction("SwitchCamera", IE_Pressed, this, &ALLBaseCharacter::SwitchCamera);
-    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ALLBaseCharacter::Jump);
+    UEnhancedInputComponent* Input = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+
+    Input->BindAction(InputMoving, ETriggerEvent::Triggered, this, &ALLBaseCharacter::Moving);
+    Input->BindAction(CameraSwitch, ETriggerEvent::Triggered, this, &ALLBaseCharacter::SwitchCamera);
+    Input->BindAction(Look, ETriggerEvent::Triggered, this, &ALLBaseCharacter::Looking);
+    Input->BindAction(Jumping, ETriggerEvent::Started, this, &ALLBaseCharacter::Jump);
+    Input->BindAction(Jumping, ETriggerEvent::Completed, this, &ALLBaseCharacter::StopJumping);
 }
 
-void ALLBaseCharacter::MoveForward(float Value)
+void ALLBaseCharacter::Moving(const FInputActionValue& Value)
 {
+    FVector2d Direction = Value.Get<FVector2d>();
     if (!SideWalk)
     {
-        FVector Direction = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
-        AddMovementInput(Direction, Value);
-    }
-}
-
-void ALLBaseCharacter::MoveRight(float Value)
-{
-    if (!SideWalk)
-    {
-        FVector Direction = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
-        AddMovementInput(Direction, Value);
+        FVector RightDirection = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
+        FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
+        AddMovementInput(ForwardDirection, Direction.Y);
+        AddMovementInput(RightDirection, Direction.X);
     }
     else
     {
-        AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
+        AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Direction.X);
+        float ZRotation = Direction.X < 0.0f ? 180.0f : 0.0f;
+        UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetControlRotation(FRotator(0.0f, ZRotation, 0.0f));
+    }
+}
+
+void ALLBaseCharacter::Looking(const FInputActionValue& Value)
+{
+    if (!SideWalk)
+    {
+        FVector2d Direction = Value.Get<FVector2d>();
+        AddControllerPitchInput(Direction.Y);
+        AddControllerYawInput(-Direction.X);
     }
 }
 
@@ -111,6 +128,8 @@ void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
                 }
                 Camera->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
                 PlayerController->SetViewTargetWithBlend(Camera, BlendTime);
+                GetCharacterMovement()->bOrientRotationToMovement = false;
+                GetCharacterMovement()->bUseControllerDesiredRotation = true;
                 SetupCamera(View);
             }
         break;
@@ -119,6 +138,8 @@ void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
             {
                 SideWalk = false;
                 PlayerController->SetViewTargetWithBlend(this, BlendTime);
+                GetCharacterMovement()->bOrientRotationToMovement = true;
+                GetCharacterMovement()->bUseControllerDesiredRotation = false;
                 SetupCamera(View);
             }
         break;
@@ -130,16 +151,12 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
     switch(View)
     {
         case EViewType::SideView:
-            // GetCharacterMovement()->bOrientRotationToMovement = false;
-            // GetCharacterMovement()->bUseControllerDesiredRotation = true;
-                GetCharacterMovement()->bOrientRotationToMovement = true;
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("SideView"));
+            GetCharacterMovement()->bUseControllerDesiredRotation = true;
             break;
         case EViewType::ThirdPerson:
             bUseControllerRotationYaw = false;
             bUseControllerRotationPitch = false;
             GetCharacterMovement()->bOrientRotationToMovement = true;
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("ThirdPersonView"));
             break;
     }
 }
