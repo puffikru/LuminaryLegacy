@@ -24,7 +24,7 @@ public:
 	ALLBaseCharacter();
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
-    float JumpZVelocity = 1250.0f;
+    float JumpZVelocity = 1200.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
     float AirControl = 0.8f;
@@ -74,6 +74,8 @@ private:
     void Looking(const FInputActionValue& Value);
     
     bool SideWalk = false;
+
+    void JumpThrough() const;
     
     // Camera
     void SwitchCamera();

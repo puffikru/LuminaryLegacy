@@ -22,6 +22,7 @@ ALLPlayerCamera::ALLPlayerCamera()
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(SceneRoot);
     SpringArmComponent->bDoCollisionTest = false;
+    SpringArmComponent->SocketOffset.Z = 150.0f;
 
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent);
@@ -34,7 +35,6 @@ void ALLPlayerCamera::OnPlayerLanded(const FHitResult& Hit)
     {
         CameraHightTarget = Hit.Location.Z;
     }
-    GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Green, TEXT("Landed"));
 }
 
 // Called when the game starts or when spawned
@@ -43,8 +43,9 @@ void ALLPlayerCamera::BeginPlay()
 	Super::BeginPlay();
 
     CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-
     CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
+
+    CameraHightTarget = CameraTarget->GetActorLocation().Z;
 }
 
 // Called every frame

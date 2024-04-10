@@ -45,9 +45,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-    float CameraHightTarget = 0.0f;
+    float CameraHightTarget;
     float ZHightThreshold = 200.0f;
-    float ZHightUpperThreshold = 350.0f;
+    float ZHightUpperThreshold = 300.0f;
     bool bIsCameraTracking = false;
 
     float GetZHeight() const;

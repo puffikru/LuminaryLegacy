@@ -15,6 +15,7 @@
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Components/CapsuleComponent.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(BaseCharacterLog, All, All);
@@ -49,6 +50,7 @@ void ALLBaseCharacter::BeginPlay()
     GetCharacterMovement()->JumpZVelocity = JumpZVelocity;
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->GravityScale = GravityScale;
+    GetCharacterMovement()->RotationRate.Yaw = 1000.0f;
 
     SetView(EViewType::SideView);
 }
@@ -57,6 +59,11 @@ void ALLBaseCharacter::BeginPlay()
 void ALLBaseCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (SideWalk)
+    {
+        JumpThrough();
+    }
 }
 
 // Called to bind functionality to input
@@ -99,6 +106,16 @@ void ALLBaseCharacter::Looking(const FInputActionValue& Value)
         AddControllerPitchInput(Direction.Y);
         AddControllerYawInput(-Direction.X);
     }
+}
+
+void ALLBaseCharacter::JumpThrough() const
+{
+    float dot = FMath::Sign(FVector::DotProduct(GetVelocity(), GetActorUpVector()));
+    FHitResult Hit;
+    FVector Start = GetActorLocation();
+    FVector End = FVector(Start.X, Start.Y, Start.Z + dot * 400.0f);
+    GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1);
+    GetComponentByClass<UCapsuleComponent>()->IgnoreComponentWhenMoving(Hit.GetComponent(), dot > 0.0f);
 }
 
 void ALLBaseCharacter::SwitchCamera()
