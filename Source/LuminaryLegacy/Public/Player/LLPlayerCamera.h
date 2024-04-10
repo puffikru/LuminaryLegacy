@@ -27,7 +27,6 @@ public:
     UFUNCTION()
     void OnPlayerLanded(const FHitResult& Hit);
 
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -49,7 +48,10 @@ private:
     float CameraHightTarget = 0.0f;
     float ZHightThreshold = 200.0f;
     float ZHightUpperThreshold = 350.0f;
-    
+    bool bIsCameraTracking = false;
 
+    float GetZHeight() const;
     FVector GetCharacterOffset() const;
+    void CheckTracking();
+
 };

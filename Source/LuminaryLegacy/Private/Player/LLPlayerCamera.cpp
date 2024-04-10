@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "LLBaseCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -51,13 +52,23 @@ void ALLPlayerCamera::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    CheckTracking();
+    
     if (CameraTarget)
     {
-        FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, 3.0f);
-        float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
-        float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
-        SetActorLocation(FVector(NewLocation.X, NewLocation.Y, FMath::FInterpTo(GetActorLocation().Z, NewHeight, DeltaTime, 3.0f)));
+        if (bIsCameraTracking)
+        {
+            FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, 3.0f);
+            SetActorLocation(FVector(NewLocation.X, NewLocation.Y, GetZHeight()));
+        }
     }
+}
+
+float ALLPlayerCamera::GetZHeight() const
+{
+    float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
+    float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
+    return FMath::FInterpTo(GetActorLocation().Z, NewHeight, GetWorld()->GetDeltaSeconds(), 3.0f);
 }
 
 FVector ALLPlayerCamera::GetCharacterOffset() const
@@ -65,5 +76,25 @@ FVector ALLPlayerCamera::GetCharacterOffset() const
     if (!CameraTarget) return FVector::ZeroVector;
     float dot = FMath::Sign(FVector::DotProduct(CameraTarget->GetActorForwardVector(), GetActorRightVector()));
     return CameraTarget->GetActorLocation() + GetActorRightVector() * dot * CameraOffset;
+}
+
+void ALLPlayerCamera::CheckTracking()
+{
+    float Distnace = FVector::Dist(GetActorLocation(), GetCharacterOffset());
+
+    if (!bIsCameraTracking)
+    {
+        if (GetZHeight() != GetActorLocation().Z || CameraTarget && CameraTarget->GetVelocity().Length() > 300.0f && Distnace > 650.0f)
+        {
+            bIsCameraTracking = true;
+        }
+    }
+    else
+    {
+        if (Distnace < 150.0f)
+        {
+            bIsCameraTracking = false;
+        }
+    }
 }
 
