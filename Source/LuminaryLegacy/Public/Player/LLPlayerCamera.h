@@ -49,9 +49,11 @@ private:
     float ZHightThreshold = 200.0f;
     float ZHightUpperThreshold = 300.0f;
     bool bIsCameraTracking = false;
+    float InterpSpeed = 3.0f;
 
     float GetZHeight() const;
     FVector GetCharacterOffset() const;
     void CheckTracking();
+    bool CheckCameraDirection() const;
 
 };

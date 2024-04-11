@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 
+DEFINE_LOG_CATEGORY_STATIC(PlayerCameraLog, All, All);
 
 // Sets default values
 ALLPlayerCamera::ALLPlayerCamera()
@@ -45,7 +46,12 @@ void ALLPlayerCamera::BeginPlay()
     CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
 
-    CameraHightTarget = CameraTarget->GetActorLocation().Z;
+    if (CameraTarget)
+    {
+        CameraHightTarget = CameraTarget->GetActorLocation().Z;
+        float dot = FMath::Sign(FVector::DotProduct(CameraTarget->GetActorForwardVector(), GetActorRightVector()));
+        SetActorLocation(CameraTarget->GetActorLocation() + GetActorRightVector() * dot * CameraOffset);
+    }
 }
 
 // Called every frame
@@ -59,7 +65,7 @@ void ALLPlayerCamera::Tick(float DeltaTime)
     {
         if (bIsCameraTracking)
         {
-            FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, 3.0f);
+            FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, InterpSpeed);
             SetActorLocation(FVector(NewLocation.X, NewLocation.Y, GetZHeight()));
         }
     }
@@ -83,19 +89,51 @@ void ALLPlayerCamera::CheckTracking()
 {
     float Distnace = FVector::Dist(GetActorLocation(), GetCharacterOffset());
 
-    if (!bIsCameraTracking)
+    if (CheckCameraDirection())
     {
-        if (GetZHeight() != GetActorLocation().Z || CameraTarget && CameraTarget->GetVelocity().Length() > 300.0f && Distnace > 650.0f)
+        InterpSpeed = 2.0f;
+        if (Distnace > 300.0f)
         {
             bIsCameraTracking = true;
         }
-    }
-    else
-    {
-        if (Distnace < 150.0f)
+        else if (Distnace < 50.0f)
         {
             bIsCameraTracking = false;
         }
     }
+    else
+    {
+        InterpSpeed = 2.0f;
+        if (Distnace > 900.0f)
+        {
+            bIsCameraTracking = true;
+        }
+    }
+    
+    // if (!bIsCameraTracking)
+    // {
+    //     if (GetZHeight() != GetActorLocation().Z || /*CameraTarget && CameraTarget->GetVelocity().Length() > 300.0f &&*/ Distnace > 650.0f)
+    //     {
+    //         bIsCameraTracking = true;
+    //     }
+    // }
+    // else
+    // {
+    //     if (Distnace < 150.0f)
+    //     {
+    //         bIsCameraTracking = false;
+    //     }
+    // }
+}
+
+bool ALLPlayerCamera::CheckCameraDirection() const
+{
+    if (CameraTarget)
+    {
+        FVector ToCameraDirection = GetActorLocation() - CameraTarget->GetActorLocation();
+        return FMath::Sign(FVector::DotProduct(ToCameraDirection, CameraTarget->GetActorForwardVector())) > 0.0f ? true : false;
+    }
+    UE_LOG(PlayerCameraLog, Error, TEXT("CameraTarget is null"));
+    return false;
 }
 
