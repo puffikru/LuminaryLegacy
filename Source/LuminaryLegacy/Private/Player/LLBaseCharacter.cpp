@@ -29,9 +29,12 @@ ALLBaseCharacter::ALLBaseCharacter()
     TPSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("TPSpringArmComponent"));
     TPSpringArmComponent->SetupAttachment(GetRootComponent());
     TPSpringArmComponent->bUsePawnControlRotation = true;
+    TPSpringArmComponent->TargetOffset.Z = 150.0f;
+    TPSpringArmComponent->TargetArmLength = 250.0f;
 
     TPCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPCameraComponent"));
     TPCameraComponent->SetupAttachment(TPSpringArmComponent);
+    TPCameraComponent->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
 }
 
 // Called when the game starts or when spawned

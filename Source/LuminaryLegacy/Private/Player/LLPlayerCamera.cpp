@@ -48,6 +48,7 @@ void ALLPlayerCamera::BeginPlay()
     {
         CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
         CameraHightTarget = CameraTarget->GetActorLocation().Z;
+        SetActorLocation(FVector(CameraTarget->GetActorLocation().X + CameraOffset, CameraTarget->GetActorLocation().Y, CameraTarget->GetActorLocation().Z));
     }
 }
 
