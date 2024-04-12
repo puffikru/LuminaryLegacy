@@ -23,38 +23,44 @@ public:
 	// Sets default values for this character's properties
 	ALLBaseCharacter();
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+    UPROPERTY(EditAnywhere, Category="Movement")
     float JumpZVelocity = 1200.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+    UPROPERTY(EditAnywhere, Category="Movement")
     float AirControl = 0.8f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+    UPROPERTY(EditAnywhere, Category="Movement")
     float GravityScale = 2.5f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* InputMoving;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* CameraSwitch;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* Look;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* Jumping;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enhanced Input")
+    UPROPERTY(EditAnywhere, Category="Movement")
+    float RotationRateYaw = 800.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float CameraBlendTime = 1.0f;
+
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     TSoftObjectPtr<UInputMappingContext> InputMappingContext;
 
 protected:
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+    UPROPERTY(VisibleAnywhere, Category="Components")
     USpringArmComponent* TPSpringArmComponent;
     
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+    UPROPERTY(VisibleAnywhere, Category="Components")
     UCameraComponent* TPCameraComponent;
     
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera")
     TSubclassOf<ALLPlayerCamera> PlayerCamera2D;
 
     // Called when the game starts or when spawned
@@ -81,7 +87,7 @@ private:
     void SwitchCamera();
     void SetView(EViewType View, float BlendTime = 0.0f);
     void SetupCamera(EViewType View);
-    ALLPlayerCamera* CreateCamera();
+    ALLPlayerCamera* CreateCamera() const;
     
     AActor* Camera;
 };

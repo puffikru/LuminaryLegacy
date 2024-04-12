@@ -18,11 +18,31 @@ public:
 	// Sets default values for this actor's properties
 	ALLPlayerCamera();
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera")
     ACharacter* CameraTarget;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera")
     float CameraOffset = 350.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    float ZHightThreshold = 200.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    float ZHightUpperThreshold = 300.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    float InterpSpeed = 3.0f;
+    
+    float SprintArmComponentSocketOffsetZ = 150.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float ForwardDirectionDistanceMaxThreshold = 300.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float ForwardDirectionDistanceMinThreshold = 50.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float BackDirectionDistanceMaxThreshold = 900.0f;
     
     UFUNCTION()
     void OnPlayerLanded(const FHitResult& Hit);
@@ -46,10 +66,7 @@ public:
 
 private:
     float CameraHightTarget;
-    float ZHightThreshold = 200.0f;
-    float ZHightUpperThreshold = 300.0f;
     bool bIsCameraTracking = false;
-    float InterpSpeed = 3.0f;
 
     float GetZHeight() const;
     FVector GetCharacterOffset() const;

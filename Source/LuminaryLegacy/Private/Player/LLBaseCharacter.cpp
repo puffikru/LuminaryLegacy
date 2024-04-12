@@ -39,18 +39,20 @@ void ALLBaseCharacter::BeginPlay()
 {
     Super::BeginPlay();
   
-    if (ALLPlayerController* PlayerController = Cast<ALLPlayerController>(Controller))
+    if (const ALLPlayerController* PlayerController = Cast<ALLPlayerController>(Controller))
     {
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
         {
             Subsystem->AddMappingContext(InputMappingContext.LoadSynchronous(), 0);
         }
     }
+
+    check(GetCharacterMovement());
     
     GetCharacterMovement()->JumpZVelocity = JumpZVelocity;
     GetCharacterMovement()->AirControl = AirControl;
     GetCharacterMovement()->GravityScale = GravityScale;
-    GetCharacterMovement()->RotationRate.Yaw = 1000.0f;
+    GetCharacterMovement()->RotationRate.Yaw = RotationRateYaw;
 
     SetView(EViewType::SideView);
 }
@@ -82,18 +84,18 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 void ALLBaseCharacter::Moving(const FInputActionValue& Value)
 {
-    FVector2d Direction = Value.Get<FVector2d>();
+    const FVector2d Direction = Value.Get<FVector2d>();
     if (!SideWalk)
     {
-        FVector RightDirection = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
-        FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
+        const FVector RightDirection = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
+        const FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
         AddMovementInput(ForwardDirection, Direction.Y);
         AddMovementInput(RightDirection, Direction.X);
     }
     else
     {
         AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Direction.X);
-        float ZRotation = Direction.X < 0.0f ? 180.0f : 0.0f;
+        const float ZRotation = Direction.X < 0.0f ? 180.0f : 0.0f;
         UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetControlRotation(FRotator(0.0f, ZRotation, 0.0f));
     }
 }
@@ -102,7 +104,7 @@ void ALLBaseCharacter::Looking(const FInputActionValue& Value)
 {
     if (!SideWalk)
     {
-        FVector2d Direction = Value.Get<FVector2d>();
+        const FVector2d Direction = Value.Get<FVector2d>();
         AddControllerPitchInput(Direction.Y);
         AddControllerYawInput(-Direction.X);
     }
@@ -110,10 +112,10 @@ void ALLBaseCharacter::Looking(const FInputActionValue& Value)
 
 void ALLBaseCharacter::JumpThrough() const
 {
-    float dot = FMath::Sign(FVector::DotProduct(GetVelocity(), GetActorUpVector()));
+    const float dot = FMath::Sign(FVector::DotProduct(GetVelocity(), GetActorUpVector()));
     FHitResult Hit;
-    FVector Start = GetActorLocation();
-    FVector End = FVector(Start.X, Start.Y, Start.Z + dot * 400.0f);
+    const FVector Start = GetActorLocation();
+    const FVector End = FVector(Start.X, Start.Y, Start.Z + dot * 400.0f);
     GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1);
     GetComponentByClass<UCapsuleComponent>()->IgnoreComponentWhenMoving(Hit.GetComponent(), dot > 0.0f);
 }
@@ -122,11 +124,11 @@ void ALLBaseCharacter::SwitchCamera()
 {
     if (SideWalk)
     {
-        SetView(EViewType::ThirdPerson, 1.0f);
+        SetView(EViewType::ThirdPerson, CameraBlendTime);
     }
     else
     {
-        SetView(EViewType::SideView, 1.0f);
+        SetView(EViewType::SideView, CameraBlendTime);
     }
 }
 
@@ -178,7 +180,7 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
     }
 }
 
-ALLPlayerCamera* ALLBaseCharacter::CreateCamera()
+ALLPlayerCamera* ALLBaseCharacter::CreateCamera() const
 {
     return GetWorld()->SpawnActor<ALLPlayerCamera>(PlayerCamera2D, this->GetActorTransform());
 }

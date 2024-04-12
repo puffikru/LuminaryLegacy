@@ -7,7 +7,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "LLBaseCharacter.h"
 #include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(PlayerCameraLog, All, All);
 
@@ -23,7 +22,7 @@ ALLPlayerCamera::ALLPlayerCamera()
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(SceneRoot);
     SpringArmComponent->bDoCollisionTest = false;
-    SpringArmComponent->SocketOffset.Z = 150.0f;
+    SpringArmComponent->SocketOffset.Z = SprintArmComponentSocketOffsetZ;
 
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent);
@@ -44,13 +43,11 @@ void ALLPlayerCamera::BeginPlay()
 	Super::BeginPlay();
 
     CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-    CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
 
     if (CameraTarget)
     {
+        CameraTarget->LandedDelegate.AddDynamic(this, &ALLPlayerCamera::OnPlayerLanded);
         CameraHightTarget = CameraTarget->GetActorLocation().Z;
-        float dot = FMath::Sign(FVector::DotProduct(CameraTarget->GetActorForwardVector(), GetActorRightVector()));
-        SetActorLocation(CameraTarget->GetActorLocation() + GetActorRightVector() * dot * CameraOffset);
     }
 }
 
@@ -58,24 +55,25 @@ void ALLPlayerCamera::BeginPlay()
 void ALLPlayerCamera::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+    
     CheckTracking();
     
-    if (CameraTarget)
+    if (bIsCameraTracking)
     {
-        if (bIsCameraTracking)
-        {
-            FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, InterpSpeed);
-            SetActorLocation(FVector(NewLocation.X, NewLocation.Y, GetZHeight()));
-        }
+        FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, InterpSpeed);
+        SetActorLocation(FVector(NewLocation.X, NewLocation.Y, GetZHeight()));
     }
 }
 
 float ALLPlayerCamera::GetZHeight() const
 {
-    float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
-    float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
-    return FMath::FInterpTo(GetActorLocation().Z, NewHeight, GetWorld()->GetDeltaSeconds(), 3.0f);
+    if (CameraTarget)
+    {
+        float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
+        float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
+        return FMath::FInterpTo(GetActorLocation().Z, NewHeight, GetWorld()->GetDeltaSeconds(), 3.0f);
+    }
+    return 0.0f;
 }
 
 FVector ALLPlayerCamera::GetCharacterOffset() const
@@ -92,11 +90,11 @@ void ALLPlayerCamera::CheckTracking()
     if (CheckCameraDirection())
     {
         InterpSpeed = 2.0f;
-        if (Distnace > 300.0f)
+        if (Distnace > ForwardDirectionDistanceMaxThreshold)
         {
             bIsCameraTracking = true;
         }
-        else if (Distnace < 50.0f)
+        else if (Distnace < ForwardDirectionDistanceMinThreshold)
         {
             bIsCameraTracking = false;
         }
@@ -104,36 +102,18 @@ void ALLPlayerCamera::CheckTracking()
     else
     {
         InterpSpeed = 2.0f;
-        if (Distnace > 900.0f)
+        if (Distnace > BackDirectionDistanceMaxThreshold)
         {
             bIsCameraTracking = true;
         }
     }
-    
-    // if (!bIsCameraTracking)
-    // {
-    //     if (GetZHeight() != GetActorLocation().Z || /*CameraTarget && CameraTarget->GetVelocity().Length() > 300.0f &&*/ Distnace > 650.0f)
-    //     {
-    //         bIsCameraTracking = true;
-    //     }
-    // }
-    // else
-    // {
-    //     if (Distnace < 150.0f)
-    //     {
-    //         bIsCameraTracking = false;
-    //     }
-    // }
 }
 
 bool ALLPlayerCamera::CheckCameraDirection() const
 {
-    if (CameraTarget)
-    {
-        FVector ToCameraDirection = GetActorLocation() - CameraTarget->GetActorLocation();
-        return FMath::Sign(FVector::DotProduct(ToCameraDirection, CameraTarget->GetActorForwardVector())) > 0.0f ? true : false;
-    }
-    UE_LOG(PlayerCameraLog, Error, TEXT("CameraTarget is null"));
-    return false;
+    if (!CameraTarget) return false;
+    
+    FVector ToCameraDirection = GetActorLocation() - CameraTarget->GetActorLocation();
+    return FMath::Sign(FVector::DotProduct(ToCameraDirection, CameraTarget->GetActorForwardVector())) > 0.0f ? true : false;
 }
 
