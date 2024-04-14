@@ -111,16 +111,12 @@ void ALLBaseCharacter::Moving(const FInputActionValue& Value)
     const FVector2d Direction = Value.Get<FVector2d>();
     if (!SideWalk)
     {
-        // const FVector RightDirection = UKismetMathLibrary::GetRightVector(FRotator(0.0f, GetControlRotation().Yaw, GetControlRotation().Roll));
-        // const FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, GetControlRotation().Yaw, 0.0f));
-        float Rot = Cast<ALLPlayerController>(GetController())->PlayerCameraManager->GetCameraRotation().Yaw;
-        FRotator temp = FRotator(0.0f, Rot, 0.0f);
-        FVector Right = UKismetMathLibrary::GetRightVector(temp);
-        FVector Forw = UKismetMathLibrary::GetForwardVector(temp);
-        AddMovementInput(Forw, Direction.Y);
-        AddMovementInput(Right, Direction.X);
-        // AddMovementInput(ForwardDirection, Direction.Y);
-        // AddMovementInput(RightDirection, Direction.X);
+        const float Rot = Cast<ALLPlayerController>(GetController())->PlayerCameraManager->GetCameraRotation().Yaw;
+        const FRotator temp = FRotator(0.0f, Rot, 0.0f);
+        const FVector RightDirection = UKismetMathLibrary::GetRightVector(temp);
+        const FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(temp);
+        AddMovementInput(ForwardDirection, Direction.Y);
+        AddMovementInput(RightDirection, Direction.X);
     }
     else
     {
