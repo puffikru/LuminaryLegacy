@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "LLCoreTypes.h"
 #include "LLBaseCharacter.generated.h"
 
 struct FInputActionValue;
 class ALLPlayerCamera;
-enum class EViewType : uint8;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
@@ -44,6 +44,15 @@ public:
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* Jumping;
 
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
+    UInputAction* TPCameraDefault;
+
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
+    UInputAction* TPCameraShoulder;
+
+    UPROPERTY(EditAnywhere, Category="Enhanced Input")
+    UInputAction* TPCameraTopDown;
+
     UPROPERTY(EditAnywhere, Category="Movement")
     float RotationRateYaw = 800.0f;
 
@@ -59,6 +68,18 @@ protected:
     
     UPROPERTY(VisibleAnywhere, Category="Components")
     UCameraComponent* TPCameraComponent;
+
+    UPROPERTY(VisibleAnywhere, Category="Components")
+    USpringArmComponent* TDSpringArmComponent;
+
+    UPROPERTY(VisibleAnywhere, Category="Components")
+    UCameraComponent* TDCameraComponent;
+
+    UPROPERTY(VisibleAnywhere, Category="Components")
+    USpringArmComponent* TPShoulderSpringArmComponent;
+
+    UPROPERTY(VisibleAnywhere, Category="Components")
+    UCameraComponent* TPShoulderCameraComponent;
     
     UPROPERTY(EditAnywhere, Category="Camera")
     TSubclassOf<ALLPlayerCamera> PlayerCamera2D;
@@ -84,10 +105,20 @@ private:
     void JumpThrough() const;
     
     // Camera
-    void SwitchCamera();
+    void SwitchCameraType();
+    void SwitchToCameraDefault();
+    void SwitchToCameraShoulder();
+    void SwitchToCameraTopDown();
     void SetView(EViewType View, float BlendTime = 0.0f);
+    void SetCameraView(ETPCameraType CameraView, float BlendTime = 1.0f);
     void SetupCamera(EViewType View);
+    void ResetCameras();
     ALLPlayerCamera* CreateCamera() const;
+    ACameraActor* CreateCameraFromComponent(UCameraComponent* CameraComponent) const;
     
-    AActor* Camera;
+    AActor* SideCamera;
+    ACameraActor* CurrentCamera;
+    UCameraComponent* CurrentCameraComponent = TPCameraComponent;
+    FTimerHandle CameraBlendTimerHandle;
+    ETPCameraType CurrentTPCameraViewType;
 };
