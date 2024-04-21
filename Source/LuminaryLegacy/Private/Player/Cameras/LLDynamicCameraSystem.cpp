@@ -39,6 +39,8 @@ void ALLDynamicCameraSystem::BeginPlay()
 {
 	Super::BeginPlay();
 
+    CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
     StartCamera->OnComponentBeginOverlap.AddDynamic(this, &ALLDynamicCameraSystem::OnStart);
     EndCamera->OnComponentBeginOverlap.AddDynamic(this, &ALLDynamicCameraSystem::OnEnd);
 }
@@ -50,8 +52,14 @@ void ALLDynamicCameraSystem::Tick(float DeltaTime)
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
     if (PlayerController && PlayerController->GetViewTarget() == this)
     {
+        DrawDebugSphere(GetWorld(), GetCharacterOffset(), 50.0f, 32, FColor::Magenta);
         if (bIsStationary)
         {
+            if (bIsDynamic)
+            {
+                FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, BlendTime);
+                SetActorLocation(NewLocation);
+            }
             CameraComponent->SetWorldRotation(TrackPlayerRotation());
         }
         else
@@ -100,5 +108,12 @@ FVector ALLDynamicCameraSystem::TrackPlayerMovement(float DeltaTime) const
     FVector Diff = FVector(1.0f, 1.0f, 1.0f) - TrackPlayer;
     FVector Target = PlayerLocation * TrackPlayer + CameraLocation * Diff;
     return FMath::VInterpTo(CameraLocation, Target, DeltaTime, 0.0f);
+}
+
+FVector ALLDynamicCameraSystem::GetCharacterOffset() const
+{
+    if (!CameraTarget) return FVector::ZeroVector;
+
+    return CameraTarget->GetActorLocation() + CameraTarget->GetActorForwardVector() * CameraOffset * -1.0f + CameraHight;
 }
 

@@ -27,6 +27,17 @@ public:
     bool bIsStationary = false;
 
     UPROPERTY(EditAnywhere, Category="Camera")
+    bool bIsDynamic = false;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float CameraOffset = 600.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    FVector CameraHight = FVector(0.0f, 0.0f, 300.0f);
+
+    ACharacter* CameraTarget;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
     FVector TrackPlayer;
 
 protected:
@@ -64,4 +75,7 @@ private:
 
     FRotator TrackPlayerRotation() const;
     FVector TrackPlayerMovement(float DeltaTime) const;
+
+    FVector GetCharacterOffset() const;
+    
 };
