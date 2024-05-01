@@ -42,6 +42,21 @@ void ALLBaseCharacter::Jump()
     Position = TPSpringArmComponent->GetComponentLocation();
 }
 
+void ALLBaseCharacter::SetCameraType(EViewType camera_type)
+{
+    switch (camera_type)
+    {
+        case EViewType::SideView:
+            SetView(EViewType::SideView, CameraBlendTime);
+        break;
+        case EViewType::ThirdPerson:
+            SetView(EViewType::ThirdPerson, CameraBlendTime);
+        break;
+        default:
+            SetView(EViewType::SideView, CameraBlendTime);
+    }
+}
+
 // Called when the game starts or when spawned
 void ALLBaseCharacter::BeginPlay()
 {
@@ -78,11 +93,10 @@ void ALLBaseCharacter::Tick(float DeltaTime)
     {
         if (bIsJumpLocked)
         {
-            FVector NewLocation = TPSpringArmComponent->GetComponentLocation();
+            const FVector NewLocation = TPSpringArmComponent->GetComponentLocation();
             TPSpringArmComponent->SetWorldLocation(FVector(NewLocation.X, NewLocation.Y, Position.Z));
         }
     }
-
 }
 
 // Called to bind functionality to input
@@ -207,7 +221,11 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
 void ALLBaseCharacter::ResetCameras()
 {
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(GetController());
-    if (!PlayerController) return;
+    if (!PlayerController)
+    {
+        UE_LOG(BaseCharacterLog, Error, TEXT("No PlayerController was found"));
+        return;
+    }
 
     PlayerController->SetViewTargetWithBlend(this, 0.0f);
 
