@@ -93,7 +93,7 @@ void ALLBaseCharacter::Tick(float DeltaTime)
     {
         if (bIsJumpLocked)
         {
-            FVector NewLocation = TPSpringArmComponent->GetComponentLocation();
+            const FVector NewLocation = TPSpringArmComponent->GetComponentLocation();
             TPSpringArmComponent->SetWorldLocation(FVector(NewLocation.X, NewLocation.Y, Position.Z));
         }
     }
@@ -205,11 +205,8 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
         case EViewType::SideView:
             GetCharacterMovement()->bOrientRotationToMovement = false;
             GetCharacterMovement()->bUseControllerDesiredRotation = true;
-            // TPSpringArmComponent->bUsePawnControlRotation = false;
-            // TPSpringArmComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
             break;
         case EViewType::ThirdPerson:
-            // TPSpringArmComponent->bUsePawnControlRotation = true;
             bUseControllerRotationYaw = false;
             bUseControllerRotationPitch = false;
             TPSpringArmComponent->TargetOffset.Z = TargetOffsetZ;
@@ -224,7 +221,11 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
 void ALLBaseCharacter::ResetCameras()
 {
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(GetController());
-    if (!PlayerController) return;
+    if (!PlayerController)
+    {
+        UE_LOG(BaseCharacterLog, Error, TEXT("No PlayerController was found"));
+        return;
+    }
 
     PlayerController->SetViewTargetWithBlend(this, 0.0f);
 
