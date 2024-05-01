@@ -35,6 +35,13 @@ ALLBaseCharacter::ALLBaseCharacter()
     TPCameraComponent->SetupAttachment(TPSpringArmComponent);
 }
 
+void ALLBaseCharacter::Jump()
+{
+    Super::Jump();
+    
+    Position = TPSpringArmComponent->GetComponentLocation();
+}
+
 // Called when the game starts or when spawned
 void ALLBaseCharacter::BeginPlay()
 {
@@ -67,6 +74,15 @@ void ALLBaseCharacter::Tick(float DeltaTime)
     {
         JumpThrough();
     }
+    else
+    {
+        if (bIsJumpLocked)
+        {
+            FVector NewLocation = TPSpringArmComponent->GetComponentLocation();
+            TPSpringArmComponent->SetWorldLocation(FVector(NewLocation.X, NewLocation.Y, Position.Z));
+        }
+    }
+
 }
 
 // Called to bind functionality to input

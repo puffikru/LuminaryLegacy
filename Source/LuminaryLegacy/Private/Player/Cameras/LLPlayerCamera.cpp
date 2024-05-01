@@ -30,7 +30,7 @@ ALLPlayerCamera::ALLPlayerCamera()
 
 void ALLPlayerCamera::OnPlayerLanded(const FHitResult& Hit)
 {
-    float HightDiff = FMath::Abs(Hit.Location.Z - CameraHightTarget);
+    const float HightDiff = FMath::Abs(Hit.Location.Z - CameraHightTarget);
     if (HightDiff > ZHightThreshold)
     {
         CameraHightTarget = Hit.Location.Z;
@@ -50,6 +50,10 @@ void ALLPlayerCamera::BeginPlay()
         CameraHightTarget = CameraTarget->GetActorLocation().Z;
         SetActorLocation(FVector(CameraTarget->GetActorLocation().X + CameraOffset, CameraTarget->GetActorLocation().Y, CameraTarget->GetActorLocation().Z));
     }
+    else
+    {
+        UE_LOG(PlayerCameraLog, Error, TEXT("No CameraTarget was set."));
+    }
 }
 
 // Called every frame
@@ -61,7 +65,7 @@ void ALLPlayerCamera::Tick(float DeltaTime)
     
     if (bIsCameraTracking)
     {
-        FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, InterpSpeed);
+        const FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, InterpSpeed);
         SetActorLocation(FVector(NewLocation.X, NewLocation.Y, GetZHeight()));
     }
 }
@@ -70,40 +74,44 @@ float ALLPlayerCamera::GetZHeight() const
 {
     if (CameraTarget)
     {
-        float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
-        float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
-        return FMath::FInterpTo(GetActorLocation().Z, NewHeight, GetWorld()->GetDeltaSeconds(), 3.0f);
+        const float CameraHightDifferences = FMath::Abs(GetActorLocation().Z - CameraTarget->GetActorLocation().Z);
+        const float NewHeight = CameraHightDifferences > ZHightUpperThreshold ? CameraTarget->GetActorLocation().Z : CameraHightTarget;
+        return FMath::FInterpTo(GetActorLocation().Z, NewHeight, GetWorld()->GetDeltaSeconds(), InterpSpeed);
     }
     return 0.0f;
 }
 
 FVector ALLPlayerCamera::GetCharacterOffset() const
 {
-    if (!CameraTarget) return FVector::ZeroVector;
-    float dot = FMath::Sign(FVector::DotProduct(CameraTarget->GetActorForwardVector(), GetActorRightVector()));
-    return CameraTarget->GetActorLocation() + GetActorRightVector() * dot * CameraOffset;
+    if (!CameraTarget)
+    {
+        UE_LOG(PlayerCameraLog, Error, TEXT("No CameraTarget was set."));
+        return FVector::ZeroVector;
+    }
+    const float Dot = FMath::Sign(FVector::DotProduct(CameraTarget->GetActorForwardVector(), GetActorRightVector()));
+    return CameraTarget->GetActorLocation() + GetActorRightVector() * Dot * CameraOffset;
 }
 
 void ALLPlayerCamera::CheckTracking()
 {
-    float Distnace = FVector::Dist(GetActorLocation(), GetCharacterOffset());
+    const float Distance = FVector::Dist(GetActorLocation(), GetCharacterOffset());
 
     if (CheckCameraDirection())
     {
-        InterpSpeed = 2.0f;
-        if (Distnace > ForwardDirectionDistanceMaxThreshold)
+        // InterpSpeed = 2.0f;
+        if (Distance > ForwardDirectionDistanceMaxThreshold)
         {
             bIsCameraTracking = true;
         }
-        else if (Distnace < ForwardDirectionDistanceMinThreshold)
+        else if (Distance < ForwardDirectionDistanceMinThreshold)
         {
             bIsCameraTracking = false;
         }
     }
     else
     {
-        InterpSpeed = 2.0f;
-        if (Distnace > BackDirectionDistanceMaxThreshold)
+        // InterpSpeed = 2.0f;
+        if (Distance > BackDirectionDistanceMaxThreshold)
         {
             bIsCameraTracking = true;
         }
@@ -114,7 +122,7 @@ bool ALLPlayerCamera::CheckCameraDirection() const
 {
     if (!CameraTarget) return false;
     
-    FVector ToCameraDirection = GetActorLocation() - CameraTarget->GetActorLocation();
+    const FVector ToCameraDirection = GetActorLocation() - CameraTarget->GetActorLocation();
     return FMath::Sign(FVector::DotProduct(ToCameraDirection, CameraTarget->GetActorForwardVector())) > 0.0f ? true : false;
 }
 

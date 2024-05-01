@@ -46,9 +46,14 @@ public:
     UPROPERTY(EditAnywhere, Category="Movement")
     float RotationRateYaw = 800.0f;
 
+    UPROPERTY(EditAnywhere, Category="Movement")
+    bool bIsJumpLocked = false;
+    
+    FVector Position = FVector::ZeroVector;
+    
     UPROPERTY(EditAnywhere, Category="Camera")
     float CameraBlendTime = 1.0f;
-
+    
     // Movement
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* InputMoving;
@@ -67,6 +72,8 @@ public:
 
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
     TSoftObjectPtr<UInputMappingContext> InputMappingContext;
+
+    void Jump() override;
 
 protected:
     UPROPERTY(VisibleAnywhere, Category="Components")
