@@ -52,14 +52,8 @@ void ALLDynamicCameraSystem::Tick(float DeltaTime)
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
     if (PlayerController && PlayerController->GetViewTarget() == this)
     {
-        DrawDebugSphere(GetWorld(), GetCharacterOffset(), 50.0f, 32, FColor::Magenta);
         if (bIsStationary)
         {
-            if (bIsDynamic)
-            {
-                FVector NewLocation = FMath::VInterpTo(GetActorLocation(), GetCharacterOffset(), DeltaTime, BlendTime);
-                SetActorLocation(NewLocation);
-            }
             CameraComponent->SetWorldRotation(TrackPlayerRotation());
         }
         else

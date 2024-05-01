@@ -30,28 +30,9 @@ ALLBaseCharacter::ALLBaseCharacter()
     TPSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("TPSpringArmComponent"));
     TPSpringArmComponent->SetupAttachment(GetRootComponent());
     TPSpringArmComponent->bUsePawnControlRotation = true;
-    TPSpringArmComponent->TargetOffset.Z = 150.0f;
-    TPSpringArmComponent->TargetArmLength = 250.0f;
 
     TPCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPCameraComponent"));
     TPCameraComponent->SetupAttachment(TPSpringArmComponent);
-    TPCameraComponent->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
-
-    TDSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("TopDownSpringArm"));
-    TDSpringArmComponent->SetupAttachment(GetRootComponent());
-    TDSpringArmComponent->bUsePawnControlRotation = true;
-
-    TDCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
-    TDCameraComponent->SetupAttachment(TDSpringArmComponent);
-
-    TPShoulderSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("ShoulderSpringArm"));
-    TPShoulderSpringArmComponent->SetupAttachment(GetRootComponent());
-    TPShoulderSpringArmComponent->bUsePawnControlRotation = true;
-    TPShoulderSpringArmComponent->TargetArmLength = 200.0f;
-    TPShoulderSpringArmComponent->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
-
-    TPShoulderCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("ShoulderCamera"));
-    TPShoulderCameraComponent->SetupAttachment(TPShoulderSpringArmComponent);
 }
 
 // Called when the game starts or when spawned
@@ -74,7 +55,6 @@ void ALLBaseCharacter::BeginPlay()
     GetCharacterMovement()->GravityScale = GravityScale;
     GetCharacterMovement()->RotationRate.Yaw = RotationRateYaw;
 
-    CurrentTPCameraViewType = ETPCameraType::None;
     SetView(EViewType::SideView);
 }
 
@@ -101,9 +81,6 @@ void ALLBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
     Input->BindAction(Look, ETriggerEvent::Triggered, this, &ALLBaseCharacter::Looking);
     Input->BindAction(Jumping, ETriggerEvent::Started, this, &ALLBaseCharacter::Jump);
     Input->BindAction(Jumping, ETriggerEvent::Completed, this, &ALLBaseCharacter::StopJumping);
-    Input->BindAction(TPCameraDefault, ETriggerEvent::Triggered, this, &ALLBaseCharacter::SwitchToCameraDefault);
-    Input->BindAction(TPCameraShoulder, ETriggerEvent::Triggered, this, &ALLBaseCharacter::SwitchToCameraShoulder);
-    Input->BindAction(TPCameraTopDown, ETriggerEvent::Triggered, this, &ALLBaseCharacter::SwitchToCameraTopDown);
 }
 
 void ALLBaseCharacter::Moving(const FInputActionValue& Value)
@@ -158,25 +135,14 @@ void ALLBaseCharacter::SwitchCameraType()
     }
 }
 
-void ALLBaseCharacter::SwitchToCameraShoulder()
-{
-    SetCameraView(ETPCameraType::Shoulder);
-}
-
-void ALLBaseCharacter::SwitchToCameraTopDown()
-{
-    SetCameraView(ETPCameraType::TopDown);
-}
-
-void ALLBaseCharacter::SwitchToCameraDefault()
-{
-    SetCameraView(ETPCameraType::Default);
-}
-
 void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
 {
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(GetController());
-    if (!PlayerController) return;
+    if (!PlayerController)
+    {
+        UE_LOG(BaseCharacterLog, Error, TEXT("No PlayerController found!"));
+        return;
+    }
     
     switch (View)
     {
@@ -186,53 +152,20 @@ void ALLBaseCharacter::SetView(EViewType View, float BlendTime)
             {
                 SideCamera = CreateCamera();
             }
-            CurrentTPCameraViewType = ETPCameraType::None;
             SideCamera->SetActorRotation(FRotator(0.0f, -90.0f, 0.0f));
             PlayerController->SetViewTargetWithBlend(SideCamera, BlendTime);
-            GetCharacterMovement()->bOrientRotationToMovement = false;
-            GetCharacterMovement()->bUseControllerDesiredRotation = true;
             SetupCamera(View);
         break;
         case EViewType::ThirdPerson:
             SideWalk = false;
-            GetCharacterMovement()->bOrientRotationToMovement = true;
-            GetCharacterMovement()->bUseControllerDesiredRotation = false;
-            SetCameraView(ETPCameraType::Default, BlendTime);
+            if (ACameraActor* TempCamera = CreateCameraFromComponent(TPCameraComponent))
+            {
+                PlayerController->SetViewTargetWithBlend(TempCamera, BlendTime);
+            }
+            GetWorldTimerManager().SetTimer(CameraBlendTimerHandle, this, &ALLBaseCharacter::ResetCameras, BlendTime);
             SetupCamera(View);
         break;
     }
-}
-
-void ALLBaseCharacter::SetCameraView(ETPCameraType CameraView, float BlendTime)
-{
-    if (CurrentTPCameraViewType != ETPCameraType::None && CurrentTPCameraViewType == CameraView) return;
-    
-    ALLPlayerController* PlayerController = Cast<ALLPlayerController>(GetController());
-    if (!PlayerController) return;
-    
-    switch (CameraView)
-    {
-        case ETPCameraType::Default:
-            CurrentTPCameraViewType = ETPCameraType::Default;
-            CurrentCameraComponent = TPCameraComponent;
-            TPSpringArmComponent->TargetOffset.Z = 150.0f;
-            TPSpringArmComponent->TargetArmLength = 250.0f;
-            TPCameraComponent->SetRelativeRotation(FRotator(-20.0f, 0.0f, 0.0f));
-            break;
-        case ETPCameraType::Shoulder:
-            CurrentTPCameraViewType = ETPCameraType::Shoulder;
-            CurrentCameraComponent = TPShoulderCameraComponent;
-            TPShoulderSpringArmComponent->TargetArmLength = 200.0f;
-            TPShoulderSpringArmComponent->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
-            break;
-        case ETPCameraType::TopDown:
-            break;
-    }
-
-    ACameraActor* TempCamera = CreateCameraFromComponent(CurrentCameraComponent);
-    PlayerController->SetViewTargetWithBlend(TempCamera, BlendTime);
-
-    GetWorldTimerManager().SetTimer(CameraBlendTimerHandle, this, &ALLBaseCharacter::ResetCameras, BlendTime);
 }
 
 void ALLBaseCharacter::SetupCamera(EViewType View)
@@ -240,32 +173,23 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
     switch(View)
     {
         case EViewType::SideView:
+            GetCharacterMovement()->bOrientRotationToMovement = false;
             GetCharacterMovement()->bUseControllerDesiredRotation = true;
             break;
         case EViewType::ThirdPerson:
             bUseControllerRotationYaw = false;
             bUseControllerRotationPitch = false;
+            TPSpringArmComponent->TargetOffset.Z = TargetOffsetZ;
+            TPSpringArmComponent->TargetArmLength = TargetArmLength;
+            TPCameraComponent->SetRelativeRotation(DefaultRotation);
             GetCharacterMovement()->bOrientRotationToMovement = true;
+            GetCharacterMovement()->bUseControllerDesiredRotation = false;
             break;
     }
 }
 
 void ALLBaseCharacter::ResetCameras()
 {
-    switch (CurrentTPCameraViewType)
-    {
-        case ETPCameraType::Default:
-            TPCameraComponent->SetActive(true);
-            TPShoulderCameraComponent->SetActive(false);
-            TDCameraComponent->SetActive(false);
-            break;
-        case ETPCameraType::Shoulder:
-            TPCameraComponent->SetActive(false);
-            TPShoulderCameraComponent->SetActive(true);
-            TDCameraComponent->SetActive(false);
-            break;
-    }
-
     ALLPlayerController* PlayerController = Cast<ALLPlayerController>(GetController());
     if (!PlayerController) return;
 
@@ -284,6 +208,7 @@ void ALLBaseCharacter::ResetCameras()
             }
         }
     }
+    GetWorldTimerManager().ClearTimer(CameraBlendTimerHandle);
 }
 
 ALLPlayerCamera* ALLBaseCharacter::CreateCamera() const

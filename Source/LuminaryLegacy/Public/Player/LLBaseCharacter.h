@@ -23,6 +23,17 @@ public:
 	// Sets default values for this character's properties
 	ALLBaseCharacter();
 
+    // Components
+    UPROPERTY(EditDefaultsOnly, Category="Components")
+    float TargetOffsetZ = 150.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Components")
+    float TargetArmLength = 250.0f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Components")
+    FRotator DefaultRotation = FRotator(-20.0f, 0.0f, 0.0f);
+
+    // Movement
     UPROPERTY(EditAnywhere, Category="Movement")
     float JumpZVelocity = 1200.0f;
 
@@ -32,6 +43,13 @@ public:
     UPROPERTY(EditAnywhere, Category="Movement")
     float GravityScale = 2.5f;
 
+    UPROPERTY(EditAnywhere, Category="Movement")
+    float RotationRateYaw = 800.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float CameraBlendTime = 1.0f;
+
+    // Movement
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* InputMoving;
 
@@ -48,18 +66,6 @@ public:
     UInputAction* TPCameraDefault;
 
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
-    UInputAction* TPCameraShoulder;
-
-    UPROPERTY(EditAnywhere, Category="Enhanced Input")
-    UInputAction* TPCameraTopDown;
-
-    UPROPERTY(EditAnywhere, Category="Movement")
-    float RotationRateYaw = 800.0f;
-
-    UPROPERTY(EditAnywhere, Category="Camera")
-    float CameraBlendTime = 1.0f;
-
-    UPROPERTY(EditAnywhere, Category="Enhanced Input")
     TSoftObjectPtr<UInputMappingContext> InputMappingContext;
 
 protected:
@@ -68,18 +74,6 @@ protected:
     
     UPROPERTY(VisibleAnywhere, Category="Components")
     UCameraComponent* TPCameraComponent;
-
-    UPROPERTY(VisibleAnywhere, Category="Components")
-    USpringArmComponent* TDSpringArmComponent;
-
-    UPROPERTY(VisibleAnywhere, Category="Components")
-    UCameraComponent* TDCameraComponent;
-
-    UPROPERTY(VisibleAnywhere, Category="Components")
-    USpringArmComponent* TPShoulderSpringArmComponent;
-
-    UPROPERTY(VisibleAnywhere, Category="Components")
-    UCameraComponent* TPShoulderCameraComponent;
     
     UPROPERTY(EditAnywhere, Category="Camera")
     TSubclassOf<ALLPlayerCamera> PlayerCamera2D;
@@ -96,29 +90,20 @@ public:
 
 private:
     // Simple moving
-
+    bool SideWalk = false;
+    
     void Moving(const FInputActionValue& Value);
     void Looking(const FInputActionValue& Value);
-    
-    bool SideWalk = false;
-
     void JumpThrough() const;
     
     // Camera
+    AActor* SideCamera;
+    FTimerHandle CameraBlendTimerHandle;
+    
     void SwitchCameraType();
-    void SwitchToCameraDefault();
-    void SwitchToCameraShoulder();
-    void SwitchToCameraTopDown();
     void SetView(EViewType View, float BlendTime = 0.0f);
-    void SetCameraView(ETPCameraType CameraView, float BlendTime = 1.0f);
     void SetupCamera(EViewType View);
     void ResetCameras();
     ALLPlayerCamera* CreateCamera() const;
     ACameraActor* CreateCameraFromComponent(UCameraComponent* CameraComponent) const;
-    
-    AActor* SideCamera;
-    ACameraActor* CurrentCamera;
-    UCameraComponent* CurrentCameraComponent = TPCameraComponent;
-    FTimerHandle CameraBlendTimerHandle;
-    ETPCameraType CurrentTPCameraViewType;
 };

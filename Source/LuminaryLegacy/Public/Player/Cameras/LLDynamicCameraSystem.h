@@ -27,9 +27,6 @@ public:
     bool bIsStationary = false;
 
     UPROPERTY(EditAnywhere, Category="Camera")
-    bool bIsDynamic = false;
-
-    UPROPERTY(EditAnywhere, Category="Camera")
     float CameraOffset = 600.0f;
 
     UPROPERTY(EditAnywhere, Category="Camera")
