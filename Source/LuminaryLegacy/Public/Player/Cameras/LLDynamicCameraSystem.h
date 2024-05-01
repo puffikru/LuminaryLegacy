@@ -23,8 +23,16 @@ public:
     UPROPERTY(EditAnywhere, Category="Camera")
     float BlendTime = 0.0f;
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera is looking at PlayerCharacter or not"))
     bool bIsStationary = false;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    float CameraOffset = 600.0f;
+
+    UPROPERTY(EditAnywhere, Category="Camera")
+    FVector CameraHight = FVector(0.0f, 0.0f, 300.0f);
+
+    ACharacter* CameraTarget;
 
     UPROPERTY(EditAnywhere, Category="Camera")
     FVector TrackPlayer;
@@ -64,4 +72,6 @@ private:
 
     FRotator TrackPlayerRotation() const;
     FVector TrackPlayerMovement(float DeltaTime) const;
+
+    FVector GetCharacterOffset() const;
 };

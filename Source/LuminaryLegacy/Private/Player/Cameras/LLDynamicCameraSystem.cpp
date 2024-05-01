@@ -12,6 +12,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
+DEFINE_LOG_CATEGORY_STATIC(DynamicCameraSystemLog, All, All)
+
 // Sets default values
 ALLDynamicCameraSystem::ALLDynamicCameraSystem()
 {
@@ -39,6 +41,8 @@ void ALLDynamicCameraSystem::BeginPlay()
 {
 	Super::BeginPlay();
 
+    CameraTarget = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
     StartCamera->OnComponentBeginOverlap.AddDynamic(this, &ALLDynamicCameraSystem::OnStart);
     EndCamera->OnComponentBeginOverlap.AddDynamic(this, &ALLDynamicCameraSystem::OnEnd);
 }
@@ -47,7 +51,7 @@ void ALLDynamicCameraSystem::BeginPlay()
 void ALLDynamicCameraSystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-    ALLPlayerController* PlayerController = Cast<ALLPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+    const ALLPlayerController* PlayerController = Cast<ALLPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
     if (PlayerController && PlayerController->GetViewTarget() == this)
     {
         if (bIsStationary)
@@ -95,10 +99,21 @@ FRotator ALLDynamicCameraSystem::TrackPlayerRotation() const
 
 FVector ALLDynamicCameraSystem::TrackPlayerMovement(float DeltaTime) const
 {
-    FVector CameraLocation = GetActorLocation() - Offset;
-    FVector PlayerLocation = Cast<ALLBaseCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))->GetActorLocation();
-    FVector Diff = FVector(1.0f, 1.0f, 1.0f) - TrackPlayer;
-    FVector Target = PlayerLocation * TrackPlayer + CameraLocation * Diff;
+    const FVector CameraLocation = GetActorLocation() - Offset;
+    const FVector PlayerLocation = Cast<ALLBaseCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))->GetActorLocation();
+    const FVector Diff = FVector(1.0f, 1.0f, 1.0f) - TrackPlayer;
+    const FVector Target = PlayerLocation * TrackPlayer + CameraLocation * Diff;
     return FMath::VInterpTo(CameraLocation, Target, DeltaTime, 0.0f);
+}
+
+FVector ALLDynamicCameraSystem::GetCharacterOffset() const
+{
+    if (!CameraTarget)
+    {
+        UE_LOG(DynamicCameraSystemLog, Error, TEXT("No CameraTarget was set"));
+        return FVector::ZeroVector;
+    }
+
+    return CameraTarget->GetActorLocation() + CameraTarget->GetActorForwardVector() * CameraOffset * -1.0f + CameraHight;
 }
 

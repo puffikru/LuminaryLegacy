@@ -18,30 +18,31 @@ public:
 	// Sets default values for this actor's properties
 	ALLPlayerCamera();
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Reference that camera looking at"))
     ACharacter* CameraTarget;
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera following position off the PlayerCharacter"))
     float CameraOffset = 350.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Height threshold when landed"))
     float ZHightThreshold = 200.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category="Camera")
-    float ZHightUpperThreshold = 300.0f;
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Height threshold when falling"))
+    float ZHightUpperThreshold = 350.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera speed to a new position"))
     float InterpSpeed = 3.0f;
-    
+
+    UPROPERTY(EditAnywhere, Category="Camera")
     float SprintArmComponentSocketOffsetZ = 150.0f;
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera starts following moving forward"))
     float ForwardDirectionDistanceMaxThreshold = 300.0f;
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera stops following moving forward"))
     float ForwardDirectionDistanceMinThreshold = 50.0f;
 
-    UPROPERTY(EditAnywhere, Category="Camera")
+    UPROPERTY(EditAnywhere, Category="Camera", meta=(ToolTip="Camera starts following moving backward"))
     float BackDirectionDistanceMaxThreshold = 900.0f;
     
     UFUNCTION()
@@ -65,7 +66,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-    float CameraHightTarget;
+    float CameraHightTarget = 0.0f;
     bool bIsCameraTracking = false;
 
     float GetZHeight() const;
