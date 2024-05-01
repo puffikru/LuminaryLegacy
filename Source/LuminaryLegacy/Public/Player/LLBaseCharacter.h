@@ -54,7 +54,6 @@ public:
     UPROPERTY(EditAnywhere, Category="Camera")
     float CameraBlendTime = 1.0f;
     
-    // Movement
     UPROPERTY(EditAnywhere, Category="Enhanced Input")
     UInputAction* InputMoving;
 
@@ -74,6 +73,8 @@ public:
     TSoftObjectPtr<UInputMappingContext> InputMappingContext;
 
     void Jump() override;
+
+    void SetCameraType(EViewType camera_type);
 
 protected:
     UPROPERTY(VisibleAnywhere, Category="Components")

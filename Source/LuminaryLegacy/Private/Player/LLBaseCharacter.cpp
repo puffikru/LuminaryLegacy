@@ -42,6 +42,21 @@ void ALLBaseCharacter::Jump()
     Position = TPSpringArmComponent->GetComponentLocation();
 }
 
+void ALLBaseCharacter::SetCameraType(EViewType camera_type)
+{
+    switch (camera_type)
+    {
+        case EViewType::SideView:
+            SetView(EViewType::SideView, CameraBlendTime);
+        break;
+        case EViewType::ThirdPerson:
+            SetView(EViewType::ThirdPerson, CameraBlendTime);
+        break;
+        default:
+            SetView(EViewType::SideView, CameraBlendTime);
+    }
+}
+
 // Called when the game starts or when spawned
 void ALLBaseCharacter::BeginPlay()
 {
@@ -82,7 +97,6 @@ void ALLBaseCharacter::Tick(float DeltaTime)
             TPSpringArmComponent->SetWorldLocation(FVector(NewLocation.X, NewLocation.Y, Position.Z));
         }
     }
-
 }
 
 // Called to bind functionality to input
@@ -191,8 +205,11 @@ void ALLBaseCharacter::SetupCamera(EViewType View)
         case EViewType::SideView:
             GetCharacterMovement()->bOrientRotationToMovement = false;
             GetCharacterMovement()->bUseControllerDesiredRotation = true;
+            // TPSpringArmComponent->bUsePawnControlRotation = false;
+            // TPSpringArmComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
             break;
         case EViewType::ThirdPerson:
+            // TPSpringArmComponent->bUsePawnControlRotation = true;
             bUseControllerRotationYaw = false;
             bUseControllerRotationPitch = false;
             TPSpringArmComponent->TargetOffset.Z = TargetOffsetZ;
